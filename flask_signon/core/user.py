@@ -19,7 +19,7 @@ class BaseUser:
     def is_superuser(self):
         return False
     
-    def get_uid(self):
+    def get_id(self):
         raise NotImplementedError("You must implement this method in your class")
 
 
