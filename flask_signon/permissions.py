@@ -24,7 +24,10 @@ class BasePermission:
         try:
             self.view = view.__name__
         except AttributeError:
-            self.view = request.endpoint
+            try:
+                self.view = view.name
+            except AttributeError:
+                self.view = request.endpoint
         self.permission_purpose = None
 
     def check_permission(self) -> bool:
@@ -44,28 +47,33 @@ class BasePermission:
             raise UnauthorizedAccess(msg)
 
 
-class IsAuthenticated(BasePermission):
+class IsActive(BasePermission):
+    def check_permission(self) -> bool:
+        return current_user.is_active
+
+
+class IsAuthenticated(IsActive):
     def __init__(self, view) -> None:
         super().__init__(view)
         self.permission_purpose = 'authenticated'
     
     def check_permission(self):
-        return current_user.is_authenticated and current_user.is_active
+        return super().check_permission() and current_user.is_authenticated
 
 
-class IsStaff(BasePermission):
+class IsStaff(IsActive):
     def __init__(self, view) -> None:
         super().__init__(view)
         self.permission_purpose = 'staff member'
     
     def check_permission(self):
-        return current_user.is_staff and current_user.is_active
+        return super().check_permission() and current_user.is_staff 
 
 
-class IsSuperuser(BasePermission):
+class IsSuperuser(IsActive):
     def __init__(self, view) -> None:
         super().__init__(view)
         self.permission_purpose = 'admin'
     
     def check_permission(self):
-        return current_user.is_superuser and current_user.is_active
+        return super().check_permission() and current_user.is_superuser
